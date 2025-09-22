@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-4">{{ modo }} contribuyente</h1>
+          <form method="post" novalidate>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="numeroContribuyente" class="form-label">Número de contribuyente</label>
+                <input type="text" class="form-control" id="numeroContribuyente" name="numero_contribuyente" required value="{{ contribuyente.numero_contribuyente|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" required value="{{ contribuyente.nombre|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="apellido" class="form-label">Apellido</label>
+                <input type="text" class="form-control" id="apellido" name="apellido" required value="{{ contribuyente.apellido|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-12">
+                <label for="direccion" class="form-label">Dirección</label>
+                <input type="text" class="form-control" id="direccion" name="direccion" required value="{{ contribuyente.direccion|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="metrosLineales" class="form-label">Metros lineales</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="metrosLineales" name="metros_lineales" value="{{ contribuyente.metros_lineales|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="samco" class="form-label">S.A.M.Co.</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="samco" name="samco" value="{{ contribuyente.samco|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="recoleccion" class="form-label">Recolección de residuos</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="recoleccion" name="recoleccion_residuos" value="{{ contribuyente.recoleccion_residuos|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="alumbrado" class="form-label">Alumbrado público</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="alumbrado" name="alumbrado_publico" value="{{ contribuyente.alumbrado_publico|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="cortePasto" class="form-label">Corte de pasto</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="cortePasto" name="corte_pasto" value="{{ contribuyente.corte_pasto|como_input if contribuyente else '' }}">
+              </div>
+              <div class="col-md-4">
+                <label for="descuento" class="form-label">Descuento jubilado</label>
+                <input type="number" step="0.01" min="0" class="form-control" id="descuento" name="descuento_jubilado" value="{{ contribuyente.descuento_jubilado|como_input if contribuyente else '' }}">
+                <div class="form-text">Se restará del total.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="fechaVencimiento" class="form-label">Fecha de vencimiento</label>
+                <input type="date" class="form-control" id="fechaVencimiento" name="fecha_vencimiento" required value="{{ contribuyente.fecha_vencimiento|como_input if contribuyente else '' }}">
+              </div>
+              {% if modo == 'Editar' %}
+                <div class="col-md-6">
+                  <label for="fechaPago" class="form-label">Fecha de pago (opcional)</label>
+                  <input type="date" class="form-control" id="fechaPago" name="fecha_pago" value="{{ contribuyente.fecha_pago|como_input if contribuyente and contribuyente.fecha_pago else '' }}">
+                  <div class="form-text">Si se completa se marcará como pagado.</div>
+                </div>
+              {% endif %}
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+              <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Volver</a>
+              <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

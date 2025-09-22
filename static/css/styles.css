@@ -1,0 +1,30 @@
+body {
+  background-color: #f4f6fb;
+}
+
+.alert-container {
+  position: relative;
+  z-index: 10;
+}
+
+.table-responsive {
+  max-height: 70vh;
+}
+
+.table-responsive table {
+  min-width: 980px;
+}
+
+footer {
+  font-size: 0.85rem;
+}
+
+.card h2.h6 {
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 768px) {
+  .table-responsive table {
+    min-width: 100%;
+  }
+}

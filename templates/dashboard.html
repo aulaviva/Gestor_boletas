@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Panel de control</h1>
+      <p class="text-muted mb-0">Administración de contribuyentes y emisión de boletas de TASA DE SERVICIOS PÚBLICOS.</p>
+    </div>
+    <div>
+      <a class="btn btn-primary" href="{{ url_for('nuevo_contribuyente') }}">Agregar contribuyente</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-success">
+        <div class="card-body">
+          <h2 class="h6 text-success text-uppercase">Total cobrado</h2>
+          <p class="display-6 mb-0">{{ total_pagado|moneda }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-danger">
+        <div class="card-body">
+          <h2 class="h6 text-danger text-uppercase">Total deudores</h2>
+          <p class="display-6 mb-0">{{ total_deuda|moneda }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      {% if contribuyentes %}
+        <div class="table-responsive">
+          <table class="table align-middle table-striped">
+            <thead>
+              <tr>
+                <th>N.º contribuyente</th>
+                <th>Nombre</th>
+                <th>Dirección</th>
+                <th>Servicios</th>
+                <th class="text-end">Importe</th>
+                <th>Vencimiento</th>
+                <th>Control de pagos</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for contribuyente in contribuyentes %}
+                <tr class="{% if contribuyente.pagado %}table-success{% endif %}">
+                  <td>
+                    <strong>{{ contribuyente.numero_contribuyente }}</strong>
+                  </td>
+                  <td>
+                    {{ contribuyente.apellido }}, {{ contribuyente.nombre }}
+                  </td>
+                  <td>{{ contribuyente.direccion }}</td>
+                  <td>
+                    <dl class="row mb-0 small">
+                      <dt class="col-sm-6">Metros lineales</dt>
+                      <dd class="col-sm-6 text-end">{{ contribuyente.metros_lineales|moneda }}</dd>
+                      <dt class="col-sm-6">S.A.M.Co.</dt>
+                      <dd class="col-sm-6 text-end">{{ contribuyente.samco|moneda }}</dd>
+                      <dt class="col-sm-6">Recolección residuos</dt>
+                      <dd class="col-sm-6 text-end">{{ contribuyente.recoleccion_residuos|moneda }}</dd>
+                      <dt class="col-sm-6">Alumbrado público</dt>
+                      <dd class="col-sm-6 text-end">{{ contribuyente.alumbrado_publico|moneda }}</dd>
+                      <dt class="col-sm-6">Corte de pasto</dt>
+                      <dd class="col-sm-6 text-end">{{ contribuyente.corte_pasto|moneda }}</dd>
+                      <dt class="col-sm-6">Descuento jubilado</dt>
+                      <dd class="col-sm-6 text-end">-{{ contribuyente.descuento_jubilado|moneda }}</dd>
+                    </dl>
+                  </td>
+                  <td class="text-end">
+                    <span class="fw-bold">{{ contribuyente.total|moneda }}</span>
+                  </td>
+                  <td>
+                    {{ contribuyente.fecha_vencimiento.strftime('%d/%m/%Y') }}
+                  </td>
+                  <td>
+                    <form action="{{ url_for('actualizar_pago', contribuyente_id=contribuyente.id) }}" method="post" class="vstack gap-2">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="on" name="pagado" id="pagado{{ contribuyente.id }}" {% if contribuyente.pagado %}checked{% endif %}>
+                        <label class="form-check-label" for="pagado{{ contribuyente.id }}">Pagado</label>
+                      </div>
+                      <label class="form-label small" for="fechaPago{{ contribuyente.id }}">Fecha de pago</label>
+                      <input type="date" class="form-control form-control-sm" id="fechaPago{{ contribuyente.id }}" name="fecha_pago" value="{{ contribuyente.fecha_pago.isoformat() if contribuyente.fecha_pago else '' }}">
+                      <button class="btn btn-sm btn-outline-success" type="submit">Actualizar</button>
+                    </form>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-flex flex-column gap-2 align-items-end">
+                      <a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ url_for('boleta_individual', contribuyente_id=contribuyente.id) }}">Imprimir</a>
+                      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('editar_contribuyente', contribuyente_id=contribuyente.id) }}">Editar</a>
+                      <form action="{{ url_for('eliminar_contribuyente', contribuyente_id=contribuyente.id) }}" method="post" onsubmit="return confirm('¿Desea eliminar el contribuyente?');">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="mb-0 text-center text-muted">Todavía no hay contribuyentes cargados. Utilice el botón “Agregar contribuyente”.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
