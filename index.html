@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gestor de boletas de tasas de servicio público</title>
+    <meta
+      name="description"
+      content="Aplicación web para generar e imprimir boletas de tasas de servicio público con código de barras y seguimiento de pagos."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-content">
+        <div>
+          <h1>Gestor de boletas de tasas de servicio público</h1>
+          <p>
+            Administre el padrón de contribuyentes, emita boletas mensuales con
+            código de barras y registre pagos manuales desde un solo tablero.
+          </p>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="print-button" class="secondary">
+            Imprimir boleta actual
+          </button>
+          <button type="button" id="reset-storage-button" class="danger">
+            Reiniciar base local
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card" id="contributors-section">
+        <div class="card-header">
+          <h2>Registro de contribuyentes</h2>
+          <p class="subtitle">
+            Cargue los datos necesarios para calcular las tasas según los metros
+            de frente, aportes al S.A.M.Co y servicios adicionales.
+          </p>
+        </div>
+
+        <form id="contributor-form" autocomplete="off" novalidate>
+          <input type="hidden" id="contributor-id" />
+          <div class="form-grid">
+            <label class="field">
+              <span>Número de cliente *</span>
+              <input
+                id="contributor-client"
+                name="clientNumber"
+                type="text"
+                required
+                placeholder="Ej: 000123"
+              />
+            </label>
+            <label class="field">
+              <span>Nombre y apellido *</span>
+              <input
+                id="contributor-name"
+                name="fullName"
+                type="text"
+                required
+                placeholder="Ej: Juan Pérez"
+              />
+            </label>
+            <label class="field">
+              <span>Domicilio *</span>
+              <input
+                id="contributor-address"
+                name="address"
+                type="text"
+                required
+                placeholder="Calle y número"
+              />
+            </label>
+            <label class="field">
+              <span>Metros de frente *</span>
+              <input
+                id="contributor-meters"
+                name="frontMeters"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                placeholder="Ej: 12.5"
+              />
+            </label>
+            <label class="field">
+              <span>Importe por metro (ARS) *</span>
+              <input
+                id="contributor-rate"
+                name="ratePerMeter"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+                placeholder="Ej: 180.50"
+              />
+            </label>
+            <label class="field">
+              <span>Aporte S.A.M.Co (ARS)</span>
+              <input
+                id="contributor-samco"
+                name="samcoContribution"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Ej: 250"
+              />
+            </label>
+            <label class="field">
+              <span>Servicio adicional 1</span>
+              <input
+                id="contributor-extra1-label"
+                name="extra1Label"
+                type="text"
+                placeholder="Nombre del servicio"
+              />
+              <input
+                id="contributor-extra1-amount"
+                name="extra1Amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Importe"
+              />
+            </label>
+            <label class="field">
+              <span>Servicio adicional 2</span>
+              <input
+                id="contributor-extra2-label"
+                name="extra2Label"
+                type="text"
+                placeholder="Nombre del servicio"
+              />
+              <input
+                id="contributor-extra2-amount"
+                name="extra2Amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Importe"
+              />
+            </label>
+            <label class="field">
+              <span>Descuento por jubilado (%)</span>
+              <input
+                id="contributor-retired"
+                name="retiredDiscount"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="Ej: 15"
+              />
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary">Guardar contribuyente</button>
+            <button type="button" id="contributor-cancel" class="secondary">
+              Cancelar edición
+            </button>
+          </div>
+          <p class="feedback" id="contributor-feedback"></p>
+        </form>
+
+        <div class="table-container">
+          <table id="contributors-table">
+            <thead>
+              <tr>
+                <th>N.º cliente</th>
+                <th>Nombre</th>
+                <th>Domicilio</th>
+                <th>Metros</th>
+                <th>$ por metro</th>
+                <th>Tasa base</th>
+                <th>S.A.M.Co</th>
+                <th>Servicios adicionales</th>
+                <th>Desc. jubilado</th>
+                <th class="actions-col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="empty">
+                <td colspan="10">Todavía no hay contribuyentes cargados.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="payments-section">
+        <div class="card-header">
+          <h2>Pagos manuales</h2>
+          <p class="subtitle">
+            Registre pagos recibidos en ventanilla o por transferencia para
+            mantener el historial actualizado.
+          </p>
+        </div>
+
+        <form id="payment-form" autocomplete="off" novalidate>
+          <div class="form-grid">
+            <label class="field">
+              <span>Contribuyente *</span>
+              <select id="payment-contributor" required></select>
+            </label>
+            <label class="field">
+              <span>Fecha de pago *</span>
+              <input id="payment-date" type="date" required />
+            </label>
+            <label class="field">
+              <span>Importe abonado (ARS) *</span>
+              <input
+                id="payment-amount"
+                type="number"
+                min="0"
+                step="0.01"
+                required
+              />
+            </label>
+            <label class="field">
+              <span>Medio de pago</span>
+              <input
+                id="payment-method"
+                type="text"
+                placeholder="Efectivo, transferencia, etc."
+              />
+            </label>
+            <label class="field field-wide">
+              <span>Observaciones</span>
+              <textarea
+                id="payment-notes"
+                rows="2"
+                placeholder="Notas internas"
+              ></textarea>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary">Registrar pago</button>
+          </div>
+          <p class="feedback" id="payment-feedback"></p>
+        </form>
+
+        <div class="table-container">
+          <table id="payments-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Contribuyente</th>
+                <th>Importe</th>
+                <th>Medio</th>
+                <th>Observaciones</th>
+                <th class="actions-col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="empty">
+                <td colspan="6">Sin pagos registrados hasta el momento.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" id="boleta-section">
+        <div class="card-header">
+          <h2>Generador de boletas mensuales</h2>
+          <p class="subtitle">
+            Seleccione el contribuyente y complete el período para producir una
+            boleta lista para imprimir. Las cantidades pueden ajustarse por
+            período si fuese necesario.
+          </p>
+        </div>
+
+        <form id="boleta-form" autocomplete="off" novalidate>
+          <div class="form-grid">
+            <label class="field">
+              <span>Contribuyente *</span>
+              <select id="boleta-contributor" required></select>
+            </label>
+            <label class="field">
+              <span>Mes *</span>
+              <select id="boleta-month" required>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Año *</span>
+              <input id="boleta-year" type="number" min="2000" required />
+            </label>
+            <label class="field">
+              <span>Vencimiento *</span>
+              <input id="boleta-due-date" type="date" required />
+            </label>
+            <label class="field">
+              <span>Metros de frente</span>
+              <input id="boleta-meters" type="number" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Importe por metro (ARS)</span>
+              <input id="boleta-rate" type="number" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Aporte S.A.M.Co (ARS)</span>
+              <input id="boleta-samco" type="number" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Servicio adicional 1</span>
+              <input id="boleta-extra1-label" type="text" />
+              <input id="boleta-extra1-amount" type="number" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Servicio adicional 2</span>
+              <input id="boleta-extra2-label" type="text" />
+              <input id="boleta-extra2-amount" type="number" min="0" step="0.01" />
+            </label>
+            <label class="field">
+              <span>Descuento jubilado (%)</span>
+              <input
+                id="boleta-retired"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+              />
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary">Actualizar previsualización</button>
+          </div>
+          <p class="feedback" id="boleta-feedback"></p>
+        </form>
+      </section>
+
+      <section class="card" id="preview-section">
+        <div class="card-header">
+          <h2>Previsualización e impresión</h2>
+          <p class="subtitle">
+            Revise la boleta generada. La impresión crea dos mitades: una para el
+            contribuyente y otra para la entidad de cobro.
+          </p>
+        </div>
+
+        <div id="boleta-empty" class="placeholder">
+          Seleccione un contribuyente para generar la boleta del período.
+        </div>
+
+        <article id="boleta-preview" class="boleta" hidden>
+          <header class="boleta-header">
+            <div>
+              <h3>Tasa de Servicio Público</h3>
+              <p>
+                Período: <span data-field="billingPeriod"></span> &mdash;
+                Vence el <span data-field="dueDate"></span>
+              </p>
+            </div>
+            <div class="boleta-meta">
+              <p>N.º de cliente: <strong data-field="clientNumber"></strong></p>
+              <p>Fecha de emisión: <span data-field="generationDate"></span></p>
+            </div>
+          </header>
+
+          <section class="boleta-info">
+            <div>
+              <p><strong>Nombre:</strong> <span data-field="fullName"></span></p>
+              <p><strong>Domicilio:</strong> <span data-field="address"></span></p>
+            </div>
+            <div>
+              <p>
+                <strong>Metros de frente:</strong>
+                <span data-field="frontMeters"></span>
+              </p>
+              <p>
+                <strong>Importe por metro:</strong>
+                <span data-field="ratePerMeter"></span>
+              </p>
+            </div>
+          </section>
+
+          <section class="boleta-split">
+            <div class="boleta-half" data-copy="contribuyente">
+              <h4>Comprobante para el contribuyente</h4>
+              <div class="boleta-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Concepto</th>
+                      <th class="right">Detalle</th>
+                      <th class="right">Importe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Tasa según metros</td>
+                      <td class="right" data-field="baseDetail"></td>
+                      <td class="right" data-field="baseAmount"></td>
+                    </tr>
+                    <tr>
+                      <td>Aporte S.A.M.Co</td>
+                      <td></td>
+                      <td class="right" data-field="samco"></td>
+                    </tr>
+                    <tr data-row="extra1">
+                      <td data-field="extra1Label"></td>
+                      <td></td>
+                      <td class="right" data-field="extra1Amount"></td>
+                    </tr>
+                    <tr data-row="extra2">
+                      <td data-field="extra2Label"></td>
+                      <td></td>
+                      <td class="right" data-field="extra2Amount"></td>
+                    </tr>
+                    <tr data-row="discount">
+                      <td>Descuento jubilado</td>
+                      <td class="right" data-field="discountDetail"></td>
+                      <td class="right" data-field="discountAmount"></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colspan="2">Total a pagar</th>
+                      <th class="right" data-field="total"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="barcode">
+                <canvas class="barcode-canvas" data-copy="barcode"></canvas>
+                <p class="barcode-text" data-field="barcodeValue"></p>
+              </div>
+            </div>
+
+            <div class="boleta-half" data-copy="banco">
+              <h4>Comprobante para el banco</h4>
+              <div class="boleta-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Concepto</th>
+                      <th class="right">Detalle</th>
+                      <th class="right">Importe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Tasa según metros</td>
+                      <td class="right" data-field="baseDetail"></td>
+                      <td class="right" data-field="baseAmount"></td>
+                    </tr>
+                    <tr>
+                      <td>Aporte S.A.M.Co</td>
+                      <td></td>
+                      <td class="right" data-field="samco"></td>
+                    </tr>
+                    <tr data-row="extra1">
+                      <td data-field="extra1Label"></td>
+                      <td></td>
+                      <td class="right" data-field="extra1Amount"></td>
+                    </tr>
+                    <tr data-row="extra2">
+                      <td data-field="extra2Label"></td>
+                      <td></td>
+                      <td class="right" data-field="extra2Amount"></td>
+                    </tr>
+                    <tr data-row="discount">
+                      <td>Descuento jubilado</td>
+                      <td class="right" data-field="discountDetail"></td>
+                      <td class="right" data-field="discountAmount"></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colspan="2">Total a pagar</th>
+                      <th class="right" data-field="total"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div class="barcode">
+                <canvas class="barcode-canvas" data-copy="barcode"></canvas>
+                <p class="barcode-text" data-field="barcodeValue"></p>
+              </div>
+            </div>
+          </section>
+
+          <footer class="boleta-footer">
+            <p>
+              Observaciones: conserve esta boleta para sus registros. El pago
+              fuera de término puede generar recargos según la normativa vigente.
+            </p>
+          </footer>
+        </article>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Los datos se almacenan localmente en este dispositivo. Realice copias de
+        seguridad periódicas exportando la información si es necesario.
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
