@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Gestor de Boletas - Comuna de Las Petacas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light;
+      --color-primario: #1b5e20;
+      --color-secundario: #2e7d32;
+      --color-acento: #f9a825;
+      --color-fondo: #f1f5f4;
+      --color-borde: #d5dad7;
+      --color-texto: #1b1b1b;
+      --ancho-contenido: min(1200px, 95vw);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: var(--color-fondo);
+      color: var(--color-texto);
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+      color: #fff;
+      padding: 2.5rem 1rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice"%3E%3Cpath fill="%23009033" fill-opacity="0.2" d="M0 65 C25 45 50 45 80 60 C110 75 135 75 160 55 L160 90 L0 90 Z" /%3E%3C/svg%3E') center/cover no-repeat;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    header h1,
+    header p {
+      margin: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+      font-weight: 500;
+    }
+
+    main {
+      width: var(--ancho-contenido);
+      margin: -3rem auto 4rem;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(24, 50, 33, 0.18);
+      padding: 2.5rem clamp(1rem, 3vw, 3rem);
+      position: relative;
+    }
+
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .resumen-card {
+      background: linear-gradient(180deg, #fafdfc, #edf5f0);
+      border: 1px solid #e0ebe3;
+      border-radius: 14px;
+      padding: 1.2rem 1rem;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .resumen-card span {
+      display: block;
+      font-size: 0.9rem;
+      color: #516458;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .resumen-card strong {
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 700;
+      color: var(--color-primario);
+    }
+
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .acciones .grupo-campo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #f4f9f6;
+      border: 1px solid var(--color-borde);
+      padding: 0.45rem 0.75rem;
+      border-radius: 12px;
+    }
+
+    .acciones label {
+      font-size: 0.85rem;
+      color: #4c5d53;
+      font-weight: 600;
+    }
+
+    input[type="search"],
+    select,
+    input[type="date"] {
+      border: none;
+      background: transparent;
+      font-size: 0.95rem;
+      outline: none;
+      min-width: 140px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 0.55rem 1.3rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-primario {
+      background: var(--color-secundario);
+      color: #fff;
+      box-shadow: 0 8px 16px rgba(30, 70, 45, 0.25);
+    }
+
+    .btn-primario:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(27, 64, 41, 0.28);
+    }
+
+    .btn-secundario {
+      background: #fff;
+      color: var(--color-secundario);
+      border: 1px solid rgba(30, 70, 45, 0.3);
+    }
+
+    .btn-borde {
+      background: transparent;
+      border: 1px solid rgba(27, 51, 35, 0.25);
+      color: var(--color-primario);
+    }
+
+    .tabla-wrapper {
+      border: 1px solid #e3e8e4;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 840px;
+    }
+
+    thead {
+      background: #f2f8f4;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.75rem;
+      color: #43614d;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #edf1ee;
+    }
+
+    tbody tr:hover {
+      background: rgba(27, 94, 32, 0.06);
+    }
+
+    td.numero {
+      font-weight: 600;
+      color: var(--color-secundario);
+      font-size: 1rem;
+    }
+
+    td.monto,
+    td.vencimiento {
+      font-variant-numeric: tabular-nums;
+    }
+
+    td.estado span {
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    td.estado span.pagado {
+      background: rgba(46, 125, 50, 0.18);
+      color: #1b5e20;
+    }
+
+    td.estado span.pendiente {
+      background: rgba(249, 168, 37, 0.25);
+      color: #b26a00;
+    }
+
+    td.estado small {
+      display: block;
+      margin-top: 0.2rem;
+      color: #647067;
+      font-size: 0.7rem;
+    }
+
+    td.acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+
+    td.acciones button {
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+    }
+
+    .badge-total {
+      background: rgba(46, 125, 50, 0.12);
+      border-radius: 8px;
+      padding: 0.25rem 0.5rem;
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    .sin-datos {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #6e7b72;
+      font-size: 0.95rem;
+    }
+
+    dialog {
+      border: none;
+      border-radius: 18px;
+      max-width: min(680px, 95vw);
+      width: 100%;
+      padding: 1.8rem;
+      box-shadow: 0 24px 48px rgba(25, 51, 33, 0.28);
+    }
+
+    dialog::backdrop {
+      background: rgba(15, 28, 21, 0.45);
+      backdrop-filter: blur(2px);
+    }
+
+    dialog h2 {
+      margin-top: 0;
+      margin-bottom: 1.2rem;
+      color: var(--color-primario);
+      font-size: 1.4rem;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .form-grupo label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #3c5142;
+    }
+
+    .form-grupo input,
+    .form-grupo textarea {
+      width: 100%;
+      padding: 0.55rem 0.6rem;
+      border: 1px solid #cdd9d1;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: #fdfefc;
+    }
+
+    .form-acciones {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.8rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #1b5e20;
+      color: #fff;
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 14px 30px rgba(27, 94, 32, 0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      z-index: 1000;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .app {
+      position: relative;
+    }
+
+    #print-area {
+      display: none;
+    }
+
+    body.printing {
+      background: #fff;
+    }
+
+    body.printing .app {
+      display: none;
+    }
+
+    body.printing #print-area {
+      display: block;
+      padding: 0;
+    }
+
+    #print-area {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #000;
+    }
+
+    .boleta {
+      display: flex;
+      flex-direction: column;
+      border: 2px solid #1b5e20;
+      border-radius: 8px;
+      margin: 0 auto 8mm;
+      width: calc(210mm - 20mm);
+      min-height: 96mm;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .boleta + .boleta {
+      page-break-before: auto;
+    }
+
+    .boleta-header {
+      text-align: center;
+      padding: 6mm 6mm 4mm;
+      border-bottom: 1px solid #1b5e20;
+      background: rgba(27, 94, 32, 0.05);
+    }
+
+    .boleta-header h2 {
+      margin: 0;
+      font-size: 12pt;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .boleta-header p {
+      margin: 2mm 0 0;
+      font-size: 11pt;
+      font-weight: 600;
+    }
+
+    .talon {
+      display: flex;
+      gap: 4mm;
+      padding: 4mm 6mm 6mm;
+      flex: 1;
+    }
+
+    .talon + .talon {
+      border-top: 1px dashed #1b5e20;
+    }
+
+    .talon-datos,
+    .talon-detalle {
+      flex: 1;
+    }
+
+    .talon-datos dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 32mm 1fr;
+      row-gap: 1.5mm;
+      column-gap: 3mm;
+      font-size: 9pt;
+    }
+
+    .talon-datos dt {
+      font-weight: 600;
+    }
+
+    .talon-detalle table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+    }
+
+    .talon-detalle th,
+    .talon-detalle td {
+      padding: 1.5mm 0;
+      border-bottom: 1px solid #cbd5c2;
+      text-align: left;
+    }
+
+    .talon-detalle tfoot td {
+      border-bottom: none;
+      font-weight: 700;
+      font-size: 10pt;
+      padding-top: 2mm;
+    }
+
+    .barcode-wrapper {
+      margin-top: 4mm;
+      text-align: center;
+    }
+
+    .barcode-wrapper svg {
+      width: 100%;
+      height: auto;
+      max-height: 30mm;
+    }
+
+    .nota {
+      font-size: 8pt;
+      text-align: center;
+      margin-top: 2mm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        background: #fff;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 10mm;
+      }
+
+      .boleta {
+        page-break-inside: avoid;
+      }
+
+      .boleta:last-child {
+        margin-bottom: 0;
+      }
+
+      .boleta:nth-of-type(3n) {
+        margin-bottom: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      main {
+        margin-top: -2.2rem;
+        padding: 1.8rem 1.1rem 2.2rem;
+      }
+
+      table {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .acciones {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .acciones .grupo-campo,
+      .acciones button {
+        width: 100%;
+      }
+
+      td.acciones {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      td.acciones button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Comuna de Las Petacas</h1>
+      <p>Gestor de Boletas - Tasa de Servicios Públicos</p>
+    </header>
+
+    <main>
+      <section class="resumen" aria-label="Resumen de contribuyentes">
+        <article class="resumen-card">
+          <span>Total de contribuyentes</span>
+          <strong id="total-contribuyentes">0</strong>
+        </article>
+        <article class="resumen-card">
+          <span>Pagos registrados</span>
+          <strong id="total-pagados">0</strong>
+        </article>
+        <article class="resumen-card">
+          <span>Pendientes de cobro</span>
+          <strong id="total-pendientes">0</strong>
+        </article>
+        <article class="resumen-card">
+          <span>Total recaudado</span>
+          <strong id="monto-pagado">$ 0,00</strong>
+        </article>
+        <article class="resumen-card">
+          <span>Total adeudado</span>
+          <strong id="monto-deuda">$ 0,00</strong>
+        </article>
+      </section>
+
+      <section class="acciones" aria-label="Acciones principales">
+        <button class="btn-primario" id="btn-nuevo">➕ Nuevo contribuyente</button>
+        <button class="btn-secundario" id="btn-imprimir-seleccion" disabled>🖨️ Imprimir seleccionados</button>
+        <button class="btn-secundario" id="btn-imprimir-todos">🖨️ Imprimir toda la lista</button>
+        <button class="btn-borde" id="btn-exportar">⬇️ Exportar base</button>
+        <label class="btn-borde" for="importar-archivo">⬆️ Importar base</label>
+        <input type="file" id="importar-archivo" accept="application/json" hidden />
+        <div class="grupo-campo">
+          <label for="filtro-estado">Estado</label>
+          <select id="filtro-estado">
+            <option value="todos">Todos</option>
+            <option value="pagados">Pagados</option>
+            <option value="pendientes">Pendientes</option>
+          </select>
+        </div>
+        <div class="grupo-campo">
+          <label for="busqueda">Buscar</label>
+          <input type="search" id="busqueda" placeholder="Nombre, apellido o número" />
+        </div>
+      </section>
+
+      <section class="tabla-wrapper" aria-live="polite">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"><span aria-hidden="true">✔</span><span class="sr-only">Seleccionar</span></th>
+              <th scope="col">Número</th>
+              <th scope="col">Nombre y apellido</th>
+              <th scope="col">Dirección</th>
+              <th scope="col">Metros lineales</th>
+              <th scope="col">Total</th>
+              <th scope="col">Vencimiento</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-contribuyentes">
+            <tr class="sin-datos">
+              <td colspan="9">Todavía no hay contribuyentes cargados. Agregue el primero para comenzar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <div id="print-area" aria-hidden="true"></div>
+
+  <dialog id="modal-formulario">
+    <form id="form-contribuyente" method="dialog">
+      <h2 id="titulo-modal">Nuevo contribuyente</h2>
+      <div class="form-grid">
+        <div class="form-grupo">
+          <label for="numero_contribuyente">Número de contribuyente</label>
+          <input id="numero_contribuyente" name="numero_contribuyente" required />
+        </div>
+        <div class="form-grupo">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" name="nombre" required />
+        </div>
+        <div class="form-grupo">
+          <label for="apellido">Apellido</label>
+          <input id="apellido" name="apellido" required />
+        </div>
+        <div class="form-grupo">
+          <label for="direccion">Dirección</label>
+          <input id="direccion" name="direccion" required />
+        </div>
+        <div class="form-grupo">
+          <label for="metros_lineales">Metros lineales</label>
+          <input id="metros_lineales" name="metros_lineales" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="samco">S.A.M.Co.</label>
+          <input id="samco" name="samco" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="recoleccion_residuos">Recolección de residuos</label>
+          <input id="recoleccion_residuos" name="recoleccion_residuos" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="alumbrado_publico">Alumbrado público</label>
+          <input id="alumbrado_publico" name="alumbrado_publico" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="corte_pasto">Corte de pasto</label>
+          <input id="corte_pasto" name="corte_pasto" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="descuento_jubilado">Descuento jubilado</label>
+          <input id="descuento_jubilado" name="descuento_jubilado" type="number" min="0" step="0.01" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="fecha_vencimiento">Fecha de vencimiento</label>
+          <input id="fecha_vencimiento" name="fecha_vencimiento" type="date" required />
+        </div>
+      </div>
+      <div class="form-acciones">
+        <button type="button" class="btn-borde" id="btn-cancelar">Cancelar</button>
+        <button type="submit" class="btn-primario">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" role="status" aria-live="polite" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = "gestor_boletas.contribuyentes";
+    const tabla = document.getElementById("tabla-contribuyentes");
+    const modal = document.getElementById("modal-formulario");
+    const formulario = document.getElementById("form-contribuyente");
+    const toast = document.getElementById("toast");
+    const busquedaInput = document.getElementById("busqueda");
+    const filtroEstado = document.getElementById("filtro-estado");
+    const printArea = document.getElementById("print-area");
+
+    let contribuyentes = [];
+    let seleccionados = new Set();
+    let editandoId = null;
+
+    const CODE128_PATTERNS = [
+      "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312",
+      "132212", "221213", "221312", "231212", "112232", "122132", "122231", "113222",
+      "123122", "123221", "223211", "221132", "221231", "213212", "223112", "312131",
+      "311222", "321122", "321221", "312212", "322112", "322211", "212123", "212321",
+      "232121", "111323", "131123", "131321", "112313", "132113", "132311", "211313",
+      "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121",
+      "313121", "211331", "231131", "213113", "213311", "213131", "311123", "311321",
+      "331121", "312113", "312311", "332111", "314111", "221411", "431111", "111224",
+      "111422", "121124", "121421", "141122", "141221", "112214", "112412", "122114",
+      "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111",
+      "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112",
+      "421211", "212141", "214121", "412121", "111143", "111341", "131141", "114113",
+      "114311", "411113", "411311", "113141", "114131", "311141", "411131", "211412",
+      "211214", "211232", "2331112"
+    ];
+
+    function mostrarToast(mensaje, duracion = 3000) {
+      toast.textContent = mensaje;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), duracion);
+    }
+
+    function cargarDatos() {
+      try {
+        const guardados = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        contribuyentes = guardados.map((item) => normalizarContribuyente(item));
+      } catch (error) {
+        contribuyentes = [];
+        console.error("Error al cargar datos almacenados", error);
+      }
+      renderizarTabla();
+      actualizarResumen();
+    }
+
+    function guardarDatos() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(contribuyentes));
+    }
+
+    function normalizarContribuyente(datos) {
+      const limpio = {
+        id: datos.id || crypto.randomUUID(),
+        numero_contribuyente: (datos.numero_contribuyente || datos.numeroContribuyente || "").trim(),
+        nombre: (datos.nombre || "").trim(),
+        apellido: (datos.apellido || "").trim(),
+        direccion: (datos.direccion || "").trim(),
+        metros_lineales: numeroSeguro(datos.metros_lineales ?? datos.metrosLineales ?? 0),
+        samco: numeroSeguro(datos.samco ?? 0),
+        descuento_jubilado: numeroSeguro(datos.descuento_jubilado ?? datos.descuentoJubilado ?? 0),
+        recoleccion_residuos: numeroSeguro(datos.recoleccion_residuos ?? datos.recoleccionResiduos ?? 0),
+        alumbrado_publico: numeroSeguro(datos.alumbrado_publico ?? datos.alumbradoPublico ?? 0),
+        corte_pasto: numeroSeguro(datos.corte_pasto ?? datos.cortePasto ?? 0),
+        fecha_vencimiento: datos.fecha_vencimiento || datos.fechaVencimiento || "",
+        pagado: Boolean(datos.pagado),
+        fecha_pago: datos.fecha_pago || datos.fechaPago || ""
+      };
+      limpio.total = calcularTotal(limpio);
+      return limpio;
+    }
+
+    function numeroSeguro(valor) {
+      const numero = Number.parseFloat(valor);
+      return Number.isFinite(numero) ? Number(numero.toFixed(2)) : 0;
+    }
+
+    function calcularTotal(contribuyente) {
+      const cargos = [
+        contribuyente.metros_lineales,
+        contribuyente.samco,
+        contribuyente.recoleccion_residuos,
+        contribuyente.alumbrado_publico,
+        contribuyente.corte_pasto
+      ];
+      const subtotal = cargos.reduce((acc, val) => acc + numeroSeguro(val), 0);
+      const descuento = numeroSeguro(contribuyente.descuento_jubilado);
+      const total = subtotal - descuento;
+      return total > 0 ? Number(total.toFixed(2)) : 0;
+    }
+
+    function formatearMoneda(valor) {
+      const numero = numeroSeguro(valor);
+      return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(numero);
+    }
+
+    function formatearFecha(fechaISO) {
+      if (!fechaISO) return "-";
+      const partes = fechaISO.split("-");
+      if (partes.length !== 3) return fechaISO;
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function renderizarTabla() {
+      const filtro = busquedaInput.value.trim().toLowerCase();
+      const estado = filtroEstado.value;
+      seleccionados = new Set(Array.from(seleccionados).filter((id) => contribuyentes.some((c) => c.id === id)));
+
+      const filtrados = contribuyentes.filter((contribuyente) => {
+        const coincideBusqueda =
+          contribuyente.numero_contribuyente.toLowerCase().includes(filtro) ||
+          `${contribuyente.nombre} ${contribuyente.apellido}`.toLowerCase().includes(filtro);
+        const coincideEstado =
+          estado === "todos" ||
+          (estado === "pagados" && contribuyente.pagado) ||
+          (estado === "pendientes" && !contribuyente.pagado);
+        return coincideBusqueda && coincideEstado;
+      });
+
+      if (!filtrados.length) {
+        tabla.innerHTML = `<tr class="sin-datos"><td colspan="9">No se encontraron contribuyentes que coincidan con la búsqueda.</td></tr>`;
+        actualizarBotonesSeleccion();
+        return;
+      }
+
+      tabla.innerHTML = filtrados
+        .map((contribuyente) => {
+          const seleccionado = seleccionados.has(contribuyente.id) ? "checked" : "";
+          const estadoClase = contribuyente.pagado ? "pagado" : "pendiente";
+          const estadoTexto = contribuyente.pagado ? "Pagado" : "Pendiente";
+          const fechaPago = contribuyente.pagado && contribuyente.fecha_pago
+            ? `<small>Pagado el ${formatearFecha(contribuyente.fecha_pago)}</small>`
+            : "";
+          const total = calcularTotal(contribuyente);
+          return `
+            <tr data-id="${contribuyente.id}">
+              <td><input type="checkbox" class="seleccion" data-id="${contribuyente.id}" ${seleccionado} aria-label="Seleccionar contribuyente ${contribuyente.numero_contribuyente}" /></td>
+              <td class="numero">${contribuyente.numero_contribuyente}</td>
+              <td>${contribuyente.nombre} ${contribuyente.apellido}</td>
+              <td>${contribuyente.direccion}</td>
+              <td class="monto">${formatearMoneda(contribuyente.metros_lineales)}</td>
+              <td class="monto"><span class="badge-total">${formatearMoneda(total)}</span></td>
+              <td class="vencimiento">${formatearFecha(contribuyente.fecha_vencimiento)}</td>
+              <td class="estado"><span class="${estadoClase}">${estadoTexto}</span>${fechaPago}</td>
+              <td class="acciones">
+                <button type="button" data-accion="pagar" data-id="${contribuyente.id}" class="btn-secundario">${contribuyente.pagado ? "Desmarcar" : "Registrar pago"}</button>
+                <button type="button" data-accion="editar" data-id="${contribuyente.id}" class="btn-borde">Editar</button>
+                <button type="button" data-accion="imprimir" data-id="${contribuyente.id}" class="btn-borde">Imprimir</button>
+                <button type="button" data-accion="eliminar" data-id="${contribuyente.id}" class="btn-borde" style="color:#b71c1c;border-color:#f1bcbc;">Eliminar</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      actualizarBotonesSeleccion();
+    }
+
+    function actualizarResumen() {
+      const totalContribuyentes = contribuyentes.length;
+      const pagados = contribuyentes.filter((c) => c.pagado);
+      const pendientes = contribuyentes.filter((c) => !c.pagado);
+      const totalPagado = pagados.reduce((acc, c) => acc + calcularTotal(c), 0);
+      const totalDeuda = pendientes.reduce((acc, c) => acc + calcularTotal(c), 0);
+
+      document.getElementById("total-contribuyentes").textContent = totalContribuyentes;
+      document.getElementById("total-pagados").textContent = pagados.length;
+      document.getElementById("total-pendientes").textContent = pendientes.length;
+      document.getElementById("monto-pagado").textContent = formatearMoneda(totalPagado);
+      document.getElementById("monto-deuda").textContent = formatearMoneda(totalDeuda);
+    }
+
+    function actualizarBotonesSeleccion() {
+      const btnSeleccion = document.getElementById("btn-imprimir-seleccion");
+      btnSeleccion.disabled = seleccionados.size === 0;
+    }
+
+    function limpiarFormulario() {
+      formulario.reset();
+      formulario.numero_contribuyente.focus();
+      editandoId = null;
+      document.getElementById("titulo-modal").textContent = "Nuevo contribuyente";
+    }
+
+    function completarFormulario(contribuyente) {
+      formulario.numero_contribuyente.value = contribuyente.numero_contribuyente;
+      formulario.nombre.value = contribuyente.nombre;
+      formulario.apellido.value = contribuyente.apellido;
+      formulario.direccion.value = contribuyente.direccion;
+      formulario.metros_lineales.value = contribuyente.metros_lineales;
+      formulario.samco.value = contribuyente.samco;
+      formulario.recoleccion_residuos.value = contribuyente.recoleccion_residuos;
+      formulario.alumbrado_publico.value = contribuyente.alumbrado_publico;
+      formulario.corte_pasto.value = contribuyente.corte_pasto;
+      formulario.descuento_jubilado.value = contribuyente.descuento_jubilado;
+      formulario.fecha_vencimiento.value = contribuyente.fecha_vencimiento;
+      document.getElementById("titulo-modal").textContent = "Editar contribuyente";
+    }
+
+    function obtenerDatosFormulario() {
+      return {
+        numero_contribuyente: formulario.numero_contribuyente.value.trim(),
+        nombre: formulario.nombre.value.trim(),
+        apellido: formulario.apellido.value.trim(),
+        direccion: formulario.direccion.value.trim(),
+        metros_lineales: numeroSeguro(formulario.metros_lineales.value),
+        samco: numeroSeguro(formulario.samco.value),
+        recoleccion_residuos: numeroSeguro(formulario.recoleccion_residuos.value),
+        alumbrado_publico: numeroSeguro(formulario.alumbrado_publico.value),
+        corte_pasto: numeroSeguro(formulario.corte_pasto.value),
+        descuento_jubilado: numeroSeguro(formulario.descuento_jubilado.value),
+        fecha_vencimiento: formulario.fecha_vencimiento.value,
+        pagado: false,
+        fecha_pago: ""
+      };
+    }
+
+    function validarFormulario(datos) {
+      if (!datos.numero_contribuyente) throw new Error("Ingrese el número de contribuyente.");
+      if (!datos.nombre) throw new Error("Ingrese el nombre.");
+      if (!datos.apellido) throw new Error("Ingrese el apellido.");
+      if (!datos.direccion) throw new Error("Ingrese la dirección.");
+      if (!datos.fecha_vencimiento) throw new Error("Seleccione la fecha de vencimiento.");
+    }
+
+    function crearContribuyente(datos) {
+      const nuevo = {
+        ...datos,
+        id: crypto.randomUUID(),
+        pagado: false,
+        fecha_pago: ""
+      };
+      nuevo.total = calcularTotal(nuevo);
+      contribuyentes.push(nuevo);
+      guardarDatos();
+      renderizarTabla();
+      actualizarResumen();
+      mostrarToast("Contribuyente agregado correctamente.");
+    }
+
+    function actualizarContribuyente(id, datos) {
+      const indice = contribuyentes.findIndex((c) => c.id === id);
+      if (indice === -1) return;
+      const existente = contribuyentes[indice];
+      const actualizado = {
+        ...existente,
+        ...datos,
+        total: calcularTotal({ ...existente, ...datos })
+      };
+      contribuyentes.splice(indice, 1, actualizado);
+      guardarDatos();
+      renderizarTabla();
+      actualizarResumen();
+      mostrarToast("Datos actualizados.");
+    }
+
+    function eliminarContribuyente(id) {
+      const contribuyente = contribuyentes.find((c) => c.id === id);
+      if (!contribuyente) return;
+      if (!confirm(`¿Confirma eliminar al contribuyente ${contribuyente.numero_contribuyente}?`)) return;
+      contribuyentes = contribuyentes.filter((c) => c.id !== id);
+      seleccionados.delete(id);
+      guardarDatos();
+      renderizarTabla();
+      actualizarResumen();
+      mostrarToast("Contribuyente eliminado.");
+    }
+
+    function alternarPago(id) {
+      const contribuyente = contribuyentes.find((c) => c.id === id);
+      if (!contribuyente) return;
+      contribuyente.pagado = !contribuyente.pagado;
+      contribuyente.fecha_pago = contribuyente.pagado ? new Date().toISOString().slice(0, 10) : "";
+      guardarDatos();
+      renderizarTabla();
+      actualizarResumen();
+      mostrarToast(contribuyente.pagado ? "Pago registrado." : "Pago desmarcado.");
+    }
+
+    function construirValorCodigo(contribuyente) {
+      const numero = contribuyente.numero_contribuyente.replace(/\D+/g, "").padStart(8, "0").slice(-8);
+      const fecha = contribuyente.fecha_vencimiento ? contribuyente.fecha_vencimiento.replace(/-/g, "") : "00000000";
+      const totalCentavos = Math.round(calcularTotal(contribuyente) * 100).toString().padStart(10, "0");
+      return `${numero}${fecha}${totalCentavos}`;
+    }
+
+    function generarCodigoBarrasSVG(valor, opciones = {}) {
+      if (!/^\d+$/.test(valor)) {
+        throw new Error("El código de barras solo admite números.");
+      }
+      if (valor.length % 2 === 1) {
+        valor = `0${valor}`;
+      }
+      const moduleWidth = opciones.moduleWidth || 1;
+      const barHeight = opciones.barHeight || 40;
+      const quietZone = opciones.quietZone ?? 10;
+      const startCode = 105;
+      const stopCode = 106;
+      const codigos = [startCode];
+      for (let i = 0; i < valor.length; i += 2) {
+        codigos.push(Number.parseInt(valor.slice(i, i + 2), 10));
+      }
+      let checksum = codigos[0];
+      for (let i = 1; i < codigos.length; i++) {
+        checksum += codigos[i] * i;
+      }
+      checksum %= 103;
+      codigos.push(checksum, stopCode);
+
+      let x = quietZone;
+      const barras = [];
+      codigos.forEach((codigo) => {
+        const patron = CODE128_PATTERNS[codigo];
+        for (let i = 0; i < patron.length; i++) {
+          const ancho = Number(patron[i]) * moduleWidth;
+          if (i % 2 === 0) {
+            barras.push(`<rect x="${x.toFixed(2)}" y="0" width="${ancho.toFixed(2)}" height="${barHeight}" fill="#000" />`);
+          }
+          x += ancho;
+        }
+      });
+      const anchoTotal = x + quietZone;
+      const altoTotal = barHeight + 18;
+      return `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${anchoTotal.toFixed(2)} ${altoTotal}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Código de barras ${valor}">
+          <rect fill="#fff" x="0" y="0" width="${anchoTotal.toFixed(2)}" height="${altoTotal}" />
+          ${barras.join("\n          ")}
+          <text x="${(anchoTotal / 2).toFixed(2)}" y="${barHeight + 12}" font-family="monospace" font-size="10" text-anchor="middle">${valor}</text>
+        </svg>
+      `;
+    }
+
+    function construirBoleta(contribuyente) {
+      const items = [
+        { concepto: "Metros lineales", monto: contribuyente.metros_lineales },
+        { concepto: "S.A.M.Co.", monto: contribuyente.samco },
+        { concepto: "Recolección de residuos", monto: contribuyente.recoleccion_residuos },
+        { concepto: "Alumbrado público", monto: contribuyente.alumbrado_publico },
+        { concepto: "Corte de pasto", monto: contribuyente.corte_pasto },
+        { concepto: "Descuento jubilado", monto: contribuyente.descuento_jubilado, negativo: true }
+      ];
+      const total = calcularTotal(contribuyente);
+      const codigo = construirValorCodigo(contribuyente);
+      const svg = generarCodigoBarrasSVG(codigo, { moduleWidth: 1, barHeight: 42, quietZone: 12 });
+
+      const filas = items
+        .filter((item) => numeroSeguro(item.monto) !== 0)
+        .map((item) => {
+          const valor = formatearMoneda(item.monto);
+          const signo = item.negativo ? "-" : "";
+          return `<tr><th scope="row">${item.concepto}</th><td>${signo}${valor}</td></tr>`;
+        })
+        .join("");
+
+      return `
+        <section class="boleta" aria-label="Boleta para ${contribuyente.nombre} ${contribuyente.apellido}">
+          <div class="boleta-header">
+            <h2>Comuna de Las Petacas</h2>
+            <p>Tasa de Servicios Públicos</p>
+          </div>
+          <div class="talon" aria-label="Talón del contribuyente">
+            <div class="talon-datos">
+              <dl>
+                <dt>Contribuyente</dt><dd>${contribuyente.nombre} ${contribuyente.apellido}</dd>
+                <dt>Número</dt><dd>${contribuyente.numero_contribuyente}</dd>
+                <dt>Dirección</dt><dd>${contribuyente.direccion}</dd>
+                <dt>Vencimiento</dt><dd>${formatearFecha(contribuyente.fecha_vencimiento)}</dd>
+                <dt>Importe</dt><dd>${formatearMoneda(total)}</dd>
+                <dt>Estado</dt><dd>${contribuyente.pagado ? "Pagado" : "Pendiente"}</dd>
+              </dl>
+            </div>
+            <div class="talon-detalle">
+              <table>
+                <tbody>
+                  ${filas || '<tr><th scope="row">Total</th><td>' + formatearMoneda(total) + '</td></tr>'}
+                </tbody>
+                <tfoot>
+                  <tr><td>Total a pagar</td><td>${formatearMoneda(total)}</td></tr>
+                </tfoot>
+              </table>
+              <div class="barcode-wrapper">${svg}</div>
+              <p class="nota">Talón para el contribuyente - Código ${codigo}</p>
+            </div>
+          </div>
+          <div class="talon" aria-label="Talón para la entidad de cobro">
+            <div class="talon-datos">
+              <dl>
+                <dt>Contribuyente</dt><dd>${contribuyente.nombre} ${contribuyente.apellido}</dd>
+                <dt>Número</dt><dd>${contribuyente.numero_contribuyente}</dd>
+                <dt>Dirección</dt><dd>${contribuyente.direccion}</dd>
+                <dt>Vencimiento</dt><dd>${formatearFecha(contribuyente.fecha_vencimiento)}</dd>
+                <dt>Fecha pago</dt><dd>${contribuyente.fecha_pago ? formatearFecha(contribuyente.fecha_pago) : "-"}</dd>
+                <dt>Importe</dt><dd>${formatearMoneda(total)}</dd>
+              </dl>
+            </div>
+            <div class="talon-detalle">
+              <table>
+                <tbody>
+                  ${filas || '<tr><th scope="row">Total</th><td>' + formatearMoneda(total) + '</td></tr>'}
+                </tbody>
+                <tfoot>
+                  <tr><td>Total a cobrar</td><td>${formatearMoneda(total)}</td></tr>
+                </tfoot>
+              </table>
+              <div class="barcode-wrapper">${svg}</div>
+              <p class="nota">Talón para el banco - Código ${codigo}</p>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function imprimirBoletas(listado) {
+      if (!listado.length) {
+        alert("No hay contribuyentes para imprimir.");
+        return;
+      }
+      const boletas = listado.map(construirBoleta).join("");
+      printArea.innerHTML = boletas;
+      document.body.classList.add("printing");
+
+      const finalizar = () => {
+        window.removeEventListener("afterprint", finalizar);
+        document.body.classList.remove("printing");
+        printArea.innerHTML = "";
+      };
+
+      window.addEventListener("afterprint", finalizar);
+      setTimeout(() => window.print(), 150);
+    }
+
+    tabla.addEventListener("change", (evento) => {
+      if (evento.target.classList.contains("seleccion")) {
+        const id = evento.target.dataset.id;
+        if (evento.target.checked) {
+          seleccionados.add(id);
+        } else {
+          seleccionados.delete(id);
+        }
+        actualizarBotonesSeleccion();
+      }
+    });
+
+    tabla.addEventListener("click", (evento) => {
+      const boton = evento.target.closest("button[data-accion]");
+      if (!boton) return;
+      const id = boton.dataset.id;
+      const accion = boton.dataset.accion;
+      if (accion === "editar") {
+        const contribuyente = contribuyentes.find((c) => c.id === id);
+        if (!contribuyente) return;
+        completarFormulario(contribuyente);
+        editandoId = id;
+        modal.showModal();
+      } else if (accion === "eliminar") {
+        eliminarContribuyente(id);
+      } else if (accion === "pagar") {
+        alternarPago(id);
+      } else if (accion === "imprimir") {
+        const contribuyente = contribuyentes.find((c) => c.id === id);
+        if (contribuyente) {
+          imprimirBoletas([contribuyente]);
+        }
+      }
+    });
+
+    formulario.addEventListener("submit", (evento) => {
+      evento.preventDefault();
+      const datos = obtenerDatosFormulario();
+      try {
+        validarFormulario(datos);
+      } catch (error) {
+        alert(error.message);
+        return;
+      }
+      if (editandoId) {
+        actualizarContribuyente(editandoId, datos);
+      } else {
+        crearContribuyente(datos);
+      }
+      modal.close();
+      limpiarFormulario();
+    });
+
+    document.getElementById("btn-cancelar").addEventListener("click", () => {
+      modal.close();
+      limpiarFormulario();
+    });
+
+    document.getElementById("btn-nuevo").addEventListener("click", () => {
+      limpiarFormulario();
+      modal.showModal();
+    });
+
+    document.getElementById("btn-imprimir-seleccion").addEventListener("click", () => {
+      const listado = contribuyentes.filter((c) => seleccionados.has(c.id));
+      imprimirBoletas(listado);
+    });
+
+    document.getElementById("btn-imprimir-todos").addEventListener("click", () => {
+      imprimirBoletas([...contribuyentes]);
+    });
+
+    document.getElementById("btn-exportar").addEventListener("click", () => {
+      if (!contribuyentes.length) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+      const blob = new Blob([JSON.stringify(contribuyentes, null, 2)], { type: "application/json" });
+      const enlace = document.createElement("a");
+      enlace.href = URL.createObjectURL(blob);
+      enlace.download = "contribuyentes.json";
+      enlace.click();
+      URL.revokeObjectURL(enlace.href);
+    });
+
+    document.getElementById("importar-archivo").addEventListener("change", (evento) => {
+      const archivo = evento.target.files?.[0];
+      if (!archivo) return;
+      const lector = new FileReader();
+      lector.onload = (e) => {
+        try {
+          const datos = JSON.parse(e.target.result);
+          if (!Array.isArray(datos)) throw new Error("Formato inválido");
+          contribuyentes = datos.map((item) => normalizarContribuyente(item));
+          guardarDatos();
+          renderizarTabla();
+          actualizarResumen();
+          mostrarToast("Datos importados correctamente.");
+        } catch (error) {
+          alert("No fue posible importar los datos: " + error.message);
+        }
+      };
+      lector.readAsText(archivo);
+      evento.target.value = "";
+    });
+
+    busquedaInput.addEventListener("input", () => {
+      renderizarTabla();
+    });
+
+    filtroEstado.addEventListener("change", () => {
+      renderizarTabla();
+    });
+
+    window.addEventListener("DOMContentLoaded", cargarDatos);
+  </script>
+</body>
+</html>
