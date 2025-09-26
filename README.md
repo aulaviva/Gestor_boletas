@@ -4,6 +4,13 @@ Aplicación para administrar contribuyentes de la **COMUNA DE LAS PETACAS**, gen
 
 > ✅ Ahora el proyecto incluye un archivo HTML autónomo listo para descargar y ejecutar sin instalar dependencias.
 
+## Descarga rápida del archivo HTML
+
+1. Dentro de este repositorio abra `gestor_boletas.html` y use la opción **Guardar como...** de su navegador para descargarlo.
+2. También puede copiar y pegar el contenido completo del archivo en un editor de texto y guardarlo con la extensión `.html`.
+3. Una vez descargado, haga doble clic sobre el archivo para abrirlo en el navegador y comenzar a usar el gestor sin instalaciones adicionales.
+
+
 ## Funcionalidades principales
 
 - Alta, edición y eliminación de contribuyentes.
