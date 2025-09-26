@@ -1,6 +1,8 @@
 # Gestor de boletas para Tasa de Servicios Públicos
 
-Aplicación web para administrar contribuyentes de la **COMUNA DE LAS PETACAS**, generar boletas con código de barras y llevar control de pagos de la tasa de servicios públicos.
+Aplicación para administrar contribuyentes de la **COMUNA DE LAS PETACAS**, generar boletas con código de barras y llevar control de pagos de la tasa de servicios públicos.
+
+> ✅ Ahora el proyecto incluye un archivo HTML autónomo listo para descargar y ejecutar sin instalar dependencias.
 
 ## Funcionalidades principales
 
@@ -9,19 +11,39 @@ Aplicación web para administrar contribuyentes de la **COMUNA DE LAS PETACAS**,
 - Control de pagos con fecha de cobro.
 - Generación de boletas individuales o de toda la nómina en formato listo para impresión (tres boletas por hoja A4, divididas en talón para el contribuyente y talón para el banco).
 - Inclusión automática de código de barras escaneable y fecha de vencimiento en cada boleta.
+- Exportación e importación de la base de datos en formato JSON.
 
-## Requisitos
+## Uso inmediato (HTML listo para ejecutar)
+
+1. Descargue o copie el archivo `gestor_boletas.html`.
+2. Ábralo directamente en su navegador favorito (Chrome, Edge, Firefox, etc.).
+3. Toda la información se guarda automáticamente en el almacenamiento local del navegador, por lo que puede cerrar y volver a abrir el archivo sin perder los datos.
+4. Desde la interfaz podrá:
+   - Cargar, editar o eliminar contribuyentes.
+   - Registrar importes por metros lineales, S.A.M.Co., recolección de residuos, alumbrado público y corte de pasto.
+   - Aplicar descuentos para jubilados.
+   - Controlar pagos y ver la fecha de cobro.
+   - Imprimir boletas individuales, las seleccionadas o toda la nómina (3 por hoja A4 con talón para contribuyente y banco).
+   - Exportar la base a un archivo JSON o importar una base previamente exportada.
+
+> Nota: si desea empezar con la base vacía, utilice el botón de exportación para generar un respaldo y borre los datos desde el navegador (en el apartado de almacenamiento local).
+
+## Uso con backend Flask (opcional)
+
+Si prefiere una solución con base de datos SQLite y servidor web, conserve el flujo original incluido en este repositorio.
+
+### Requisitos
 
 - Python 3.11+
 - Dependencias listadas en `requirements.txt`
 
-## Instalación
+### Instalación
 
 1. Crear un entorno virtual (opcional pero recomendado):
 
    ```bash
    python -m venv .venv
-   source .venv/bin/activate  # En Windows: .venv\\Scripts\\activate
+   source .venv/bin/activate  # En Windows: .venv\Scripts\activate
    ```
 
 2. Instalar las dependencias:
@@ -32,7 +54,7 @@ Aplicación web para administrar contribuyentes de la **COMUNA DE LAS PETACAS**,
 
 3. Inicializar la base de datos SQLite (se crea automáticamente al iniciar la aplicación).
 
-## Uso
+### Uso
 
 1. Iniciar la aplicación:
 
@@ -62,4 +84,4 @@ Los datos se almacenan en el archivo `gestor_boletas.db` dentro del proyecto.
 
 - Los importes se almacenan y muestran con dos decimales.
 - Si se registra la fecha de pago, el contribuyente se marca automáticamente como cobrado.
-- Para reiniciar el sistema desde cero, eliminar el archivo `gestor_boletas.db`.
+- Para reiniciar el sistema desde cero en la versión Flask, eliminar el archivo `gestor_boletas.db`.
